@@ -1,0 +1,96 @@
+---
+title: "week0_refresh"
+format: html
+theme: darkly
+title-block-banner: true
+---
+
+## 1 & 2. Load Packages and Data
+
+```{r}
+pacman::p_load("here", "janitor", "tidyverse", "sf", "terra", "tmap", "spData", "spDataLarge", "geodata", "kableExtra", "viridisLite")
+```
+
+```{r}
+# Read and clean_names()
+gdw_df <- read_csv(here::here('data/gdw.csv')) |> 
+  janitor::clean_names()
+```
+
+## 3. Data Exploration
+
+```{r}
+# Create table of first 10 rows
+head(gdw_df, 10) |> 
+  kable()
+```
+
+```{r}
+# Create table of last 10 rows
+tail(gdw_df, 10) |> 
+  kable()
+```
+
+```{r}
+# Print dimensions of data
+dim(gdw_df)
+```
+
+```{r}
+# Print column names
+colnames(gdw_df)
+```
+
+## 4. Index, Summarize, Subset
+
+```{r}
+country_names_vec <- gdw_df['country']
+country_names_df <- gdw_df[['country']] 
+```
+
+```{r}
+# Find counts per dam type
+gdw_df |> 
+  group_by(dam_type) |> 
+  summarize(count = n()) |> 
+  ungroup()
+```
+
+```{r}
+# Filter to only 'Dam' dam type
+sub_dam <- gdw_df |> 
+  filter(dam_type == "Dam")
+```
+
+```{r}
+# Sort to ascending
+sub_dam_asc <- sub_dam |> 
+  arrange(year_dam)
+```
+
+## 5. Data Viz
+```{r}
+# Create bar plot for average heights by country
+avg_heights_dams <- gdw_df |> 
+  group_by(country) |> 
+  summarise(avg_height_m = mean(dam_hgt_m, na.rm = TRUE)) |> 
+  arrange(avg_height_m) |> 
+  ungroup()
+
+ggplot(avg_heights_dams, aes(fct_rev(fct_reorder(country, avg_height_m)), avg_height_m)) +
+  geom_col(fill = '#88C6BE') +
+  labs(x = "Country",
+       y = "Average Dam Height (m)") +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1))
+```
+
+```{r}
+# Create scatter plot for storage capacity vs dam height
+ggplot(gdw_df, aes(dam_hgt_m, cap_mcm)) +
+  geom_point(color = '#f7567c', size = 2) +
+  labs(x = "Dam Height (m)",
+       y = "Max Storage Capacity (Millions Cubic Meters)") +
+  theme_light()
+```
+
